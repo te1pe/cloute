@@ -1,0 +1,26 @@
+# Go
+/bin/
+*.exe
+*.test
+*.out
+coverage.*
+
+# Node / frontend
+node_modules/
+web/dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Vite cache
+.vite/

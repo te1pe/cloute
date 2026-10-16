@@ -1,0 +1,13 @@
+{
+  "description": "Снапшот документа после всех операций вектора testdata/crdt/09_offline_student.json. Go кодирует состояние ровно в этот JSON, TS восстанавливает из него документ с текстом «Bzxy».",
+  "text": "Bzxy",
+  "snapshot": {
+    "chars": [
+      {"id": [1, 1], "after": [0, 0], "char": "A", "deleted": true},
+      {"id": [2, 1], "after": [1, 1], "char": "B"},
+      {"id": [3, 3], "after": [2, 1], "char": "z"},
+      {"id": [3, 2], "after": [2, 1], "char": "x"},
+      {"id": [4, 2], "after": [3, 2], "char": "y"}
+    ]
+  }
+}

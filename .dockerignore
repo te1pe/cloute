@@ -1,0 +1,10 @@
+# Keep the build context small and free of local state.
+.git
+.claude
+bin
+web/node_modules
+web/dist
+**/*.test
+**/.DS_Store
+.env
+.env.*

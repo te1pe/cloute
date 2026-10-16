@@ -1,0 +1,12 @@
+{
+  "name": "unicode",
+  "description": "Кириллица и символы вне BMP. Один char — одна кодовая точка Unicode: «👋» в UTF-16 занимает две кодовые единицы, но это один символ CRDT.",
+  "ops": [
+    {"type": "insert", "id": [1, 1], "after": [0, 0], "char": "м"},
+    {"type": "insert", "id": [2, 1], "after": [1, 1], "char": "и"},
+    {"type": "insert", "id": [3, 1], "after": [2, 1], "char": "р"},
+    {"type": "insert", "id": [1, 2], "after": [0, 0], "char": "👋"},
+    {"type": "insert", "id": [4, 3], "after": [3, 1], "char": "🎉"}
+  ],
+  "expected": "👋мир🎉"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "insert_after_deleted",
+  "description": "Напечатано «ab». Реплика 2 удаляет «a», реплика 3 конкурентно вставляет «x» сразу после «a». Tombstone «a» остаётся якорем, «x» не теряется.",
+  "ops": [
+    {"type": "insert", "id": [1, 1], "after": [0, 0], "char": "a"},
+    {"type": "insert", "id": [2, 1], "after": [1, 1], "char": "b"},
+    {"type": "delete", "id": [1, 1]},
+    {"type": "insert", "id": [3, 3], "after": [1, 1], "char": "x"}
+  ],
+  "expected": "xb"
+}

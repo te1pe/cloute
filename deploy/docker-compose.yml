@@ -1,0 +1,44 @@
+name: cloute
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: cloute
+      # Takes effect only when the volume is created; see README.
+      POSTGRES_PASSWORD: ${CLOUTE_DB_PASSWORD:-cloute}
+      POSTGRES_DB: cloute
+    ports:
+      # 5432 is often taken by a local Postgres; override with CLOUTE_DB_PORT.
+      - "127.0.0.1:${CLOUTE_DB_PORT:-5434}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloute -d cloute"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  # The server itself; started only with the profile, so that `make db-up`
+  # keeps starting just the database for development:
+  #   docker compose -f deploy/docker-compose.yml --profile app up -d --build
+  app:
+    profiles: ["app"]
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      CLOUTE_DATABASE_URL: postgres://cloute:${CLOUTE_DB_PASSWORD:-cloute}@postgres:5432/cloute?sslmode=disable
+      CLOUTE_COOKIE_SECURE: ${CLOUTE_COOKIE_SECURE:-false}
+      CLOUTE_LOG_FORMAT: json
+    ports:
+      # Behind a TLS reverse proxy on the same host; not exposed directly.
+      - "127.0.0.1:${CLOUTE_APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    stop_grace_period: 15s
+
+volumes:
+  pgdata:

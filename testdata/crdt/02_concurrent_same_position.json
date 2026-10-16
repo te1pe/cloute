@@ -1,0 +1,10 @@
+{
+  "name": "concurrent_same_position",
+  "description": "Три реплики одновременно вставляют символ в начало пустого документа с одинаковым lamport. Порядок — по убыванию ID, то есть по убыванию replica: c(1,3), b(1,2), a(1,1).",
+  "ops": [
+    {"type": "insert", "id": [1, 1], "after": [0, 0], "char": "a"},
+    {"type": "insert", "id": [1, 2], "after": [0, 0], "char": "b"},
+    {"type": "insert", "id": [1, 3], "after": [0, 0], "char": "c"}
+  ],
+  "expected": "cba"
+}

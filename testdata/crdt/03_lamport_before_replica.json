@@ -1,0 +1,10 @@
+{
+  "name": "lamport_before_replica",
+  "description": "Конкурентные вставки в начало с разными lamport: больший lamport идёт раньше независимо от replica. y(2,2) > z(1,3) > x(1,1).",
+  "ops": [
+    {"type": "insert", "id": [1, 1], "after": [0, 0], "char": "x"},
+    {"type": "insert", "id": [2, 2], "after": [0, 0], "char": "y"},
+    {"type": "insert", "id": [1, 3], "after": [0, 0], "char": "z"}
+  ],
+  "expected": "yzx"
+}

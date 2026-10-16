@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Access-link tokens are in the URL: never leak them in a Referer. -->
+    <meta name="referrer" content="no-referrer" />
+    <title>Cloute</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 16px;
+        font-family: system-ui, sans-serif;
+        background: #fafafa;
+        color: #222;
+      }
+      header {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 20px;
+        flex: 1;
+      }
+      .card {
+        max-width: 360px;
+        margin: 40px auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin: 8px 0;
+      }
+      .row input {
+        flex: 1;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        padding: 6px 8px;
+      }
+      button.link {
+        background: none;
+        border: none;
+        color: #06c;
+        cursor: pointer;
+        padding: 0;
+      }
+      .muted {
+        color: #666;
+      }
+      .error {
+        color: #b00;
+        min-height: 1em;
+        margin: 0;
+      }
+      .docs li,
+      .links li {
+        margin: 4px 0;
+      }
+      .share,
+      .versions-panel {
+        margin-bottom: 12px;
+      }
+      .versions li {
+        margin: 4px 0;
+      }
+      .preview {
+        white-space: pre-wrap;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 8px;
+        max-height: 30vh;
+        overflow: auto;
+      }
+      #status {
+        margin: 0 0 8px;
+        font-size: 14px;
+        color: #555;
+      }
+      .editor-layout {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .editor-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+        height: calc(100vh - 170px);
+      }
+      /* The backdrop and the textarea must lay text out identically. */
+      #editor,
+      .backdrop {
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 12px;
+        font: 16px/1.5 ui-monospace, monospace;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        letter-spacing: normal;
+      }
+      .backdrop {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        color: transparent;
+        background: #fff;
+        pointer-events: none;
+      }
+      .backdrop.readonly {
+        background: #eee;
+      }
+      #editor {
+        position: relative;
+        display: block;
+        background: transparent;
+        resize: none;
+        overflow-y: auto;
+      }
+      .backdrop mark {
+        color: transparent;
+        border-radius: 2px;
+      }
+      .backdrop mark.comment {
+        background: rgb(255 200 0 / 0.35);
+      }
+      .backdrop mark.comment.active {
+        background: rgb(255 160 0 / 0.6);
+      }
+      .caret {
+        position: relative;
+      }
+      .caret i {
+        position: absolute;
+        left: -1px;
+        top: 0;
+        height: 1.5em;
+        border-left: 2px solid var(--caret);
+      }
+      .caret b {
+        position: absolute;
+        left: -1px;
+        top: -1.1em;
+        font: 11px/1.3 system-ui, sans-serif;
+        color: #fff;
+        background: var(--caret);
+        padding: 0 3px;
+        border-radius: 3px;
+        white-space: nowrap;
+      }
+      .comments {
+        width: 280px;
+        flex-shrink: 0;
+        font-size: 14px;
+      }
+      .comments h2 {
+        font-size: 16px;
+        margin: 0 0 8px;
+      }
+      .comment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .comment-form textarea {
+        font: inherit;
+        resize: vertical;
+      }
+      .comment-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .comment-list li {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        background: #fff;
+      }
+      .comment-list li.active {
+        border-color: #f0a000;
+      }
+      .comment-list blockquote {
+        margin: 0 0 4px;
+        font-style: italic;
+      }
+      .comment-list p {
+        margin: 0 0 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

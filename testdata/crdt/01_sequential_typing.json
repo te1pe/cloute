@@ -1,0 +1,10 @@
+{
+  "name": "sequential_typing",
+  "description": "Одна реплика печатает «abc»: каждый символ вставлен после предыдущего.",
+  "ops": [
+    {"type": "insert", "id": [1, 1], "after": [0, 0], "char": "a"},
+    {"type": "insert", "id": [2, 1], "after": [1, 1], "char": "b"},
+    {"type": "insert", "id": [3, 1], "after": [2, 1], "char": "c"}
+  ],
+  "expected": "abc"
+}

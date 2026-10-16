@@ -1,0 +1,11 @@
+{
+  "name": "concurrent_delete_same_char",
+  "description": "Две реплики конкурентно удаляют один и тот же символ. Повторное удаление ничего не меняет.",
+  "ops": [
+    {"type": "insert", "id": [1, 1], "after": [0, 0], "char": "a"},
+    {"type": "insert", "id": [2, 1], "after": [1, 1], "char": "b"},
+    {"type": "delete", "id": [1, 1]},
+    {"type": "delete", "id": [1, 1]}
+  ],
+  "expected": "b"
+}
