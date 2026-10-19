@@ -1,93 +1,66 @@
 # Cloute
 
-A cloud text editor for small teams and study groups to work on together.
-Several people edit one document at the same time and see each other's edits
-and cursors; concurrent edits merge automatically through a CRDT (RGA, written
-by hand in Go and TypeScript), including after working offline. The service is
-deployed on the organisation's own server.
+Облачный текстовый редактор для совместной работы небольших команд и учебных групп. Несколько человек правят один документ одновременно и видят правки и курсоры друг друга; одновременные правки сливаются автоматически через CRDT (RGA, написан вручную на Go и TypeScript), в том числе после работы офлайн. Сервис разворачивается на собственном сервере организации.
 
-- Real-time collaborative editing, participants' cursors and selections.
-- Offline mode: edits pile up locally and merge after reconnecting, nothing is lost.
-- Roles `owner` / `editor` / `commenter` / `viewer`, access by link with a role.
-- Comments on text ranges that do not drift when the text is edited.
-- Version history and a rollback that does not lose other people's concurrent edits.
+- Совместная правка в реальном времени, курсоры и выделения участников.
+- Офлайн-режим: правки копятся локально и сливаются после переподключения без потерь.
+- Роли `owner` / `editor` / `commenter` / `viewer`, доступ по ссылке с ролью.
+- Комментарии к фрагментам текста, не «съезжающие» при правках.
+- История версий и откат, который не теряет одновременные правки других.
 
-Client–server protocol: [api/protocol.md](api/protocol.md). HTTP API:
-[api/http.md](api/http.md) (both in Russian).
+Протокол клиент–сервер: [api/protocol.md](api/protocol.md). HTTP API: [api/http.md](api/http.md).
 
-## Development
+## Разработка
 
-You need Go (the version from `go.mod`), Node.js 20.19+ or 22.12+ (a Vite
-requirement) and Docker.
+Нужны Go (версия из `go.mod`), Node.js 20.19+ или 22.12+ (требование Vite), Docker.
 
 ```bash
-make db-up                 # PostgreSQL in Docker on 127.0.0.1:5434
-npm --prefix web ci        # once
-make run                   # server on :8080 (migrations are applied at startup)
-npm --prefix web run dev   # client on http://localhost:5173 (proxies /api and /ws to :8080)
+make db-up                 # PostgreSQL в Docker на 127.0.0.1:5434
+npm --prefix web ci        # один раз
+make run                   # сервер на :8080 (миграции применяются при старте)
+npm --prefix web run dev   # клиент на http://localhost:5173 (проксирует /api и /ws на :8080)
 ```
 
-Checks:
+Проверки:
 
 ```bash
-gofmt -l .                 # empty
+gofmt -l .                 # пусто
 go vet ./...
-go test -race ./...        # needs make db-up; with -short the database tests are skipped
+go test -race ./...        # нужен make db-up; с -short тесты с БД пропускаются
 make lint                  # gofmt, go vet, golangci-lint
 npm --prefix web run build && npm --prefix web test
 ```
 
-`make build` produces a single executable `bin/cloute` with the frontend
-embedded (`go build -tags embedweb`). Without the `embedweb` tag the frontend is
-not embedded — that way `go build ./...` works even before the frontend is
-built.
+`make build` собирает один исполняемый файл `bin/cloute` с встроенным фронтендом (`go build -tags embedweb`). Без тега `embedweb` фронтенд не встраивается — так `go build ./...` работает и до сборки фронтенда.
 
-## Deployment
+## Развёртывание
 
-The server is one static binary with the frontend inside; all it needs is
-PostgreSQL 16+. A ready-made option is Docker Compose from `deploy/`: the image
-is built from source (`deploy/Dockerfile`, about 26 MB, distroless, no shell,
-not running as root).
+Сервер — один статический бинарник с фронтендом внутри; ему нужен только PostgreSQL 16+. Готовый вариант — Docker Compose из `deploy/`: образ собирается из исходников (`deploy/Dockerfile`, около 26 МБ, distroless, без shell, не от root).
 
-### Running
+### Запуск
 
 ```bash
-export CLOUTE_DB_PASSWORD='a-long-random-password'
+export CLOUTE_DB_PASSWORD='длинный-случайный-пароль'
 export CLOUTE_COOKIE_SECURE=true
 docker compose -f deploy/docker-compose.yml --profile app up -d --build --wait
 curl -fsS http://127.0.0.1:8080/healthz
 ```
 
-Without `--profile app` compose starts only the database (which is exactly what
-`make db-up` does for development). Schema migrations are applied by the server
-on every start; running several instances at once is safe — migrations run
-under a lock in the database.
+Без `--profile app` compose поднимает только базу (это и делает `make db-up` для разработки). Миграции схемы применяются сервером при каждом старте; одновременный запуск нескольких экземпляров безопасен — миграции идут под блокировкой в БД.
 
-- **Database password** (`CLOUTE_DB_PASSWORD`) must be set before the first
-  run: PostgreSQL applies it only when the `pgdata` volume is created. If the
-  password contains characters that are special in URLs (`@ : / ? #`), encode
-  them — it is substituted into `CLOUTE_DATABASE_URL`.
-- **Port** of the app is bound to `127.0.0.1` only (`CLOUTE_APP_PORT`, 8080 by
-  default): from outside the service is reached through a reverse proxy with
-  HTTPS.
-- **Logs** are JSON on stdout:
-  `docker compose -f deploy/docker-compose.yml logs -f app`.
-- **Stopping** (`docker compose ... stop app`) is graceful: the server writes
-  out document snapshots and closes client connections, and the clients
-  reconnect on their own.
+- **Пароль БД** (`CLOUTE_DB_PASSWORD`) задаётся до первого запуска: PostgreSQL применяет его только при создании тома `pgdata`. Если пароль содержит символы, особые для URL (`@ : / ? #`), закодируйте их — он подставляется в `CLOUTE_DATABASE_URL`.
+- **Порт** приложения открыт только на `127.0.0.1` (`CLOUTE_APP_PORT`, по умолчанию 8080): снаружи сервис доступен через обратный прокси с HTTPS.
+- **Логи** — JSON в stdout: `docker compose -f deploy/docker-compose.yml logs -f app`.
+- **Остановка** (`docker compose ... stop app`) штатная: сервер дописывает снапшоты документов и закрывает соединения клиентов, клиенты переподключаются сами.
 
-### HTTPS and a reverse proxy
+### HTTPS и обратный прокси
 
-The session lives in a cookie, so on the internet the service must run over
-HTTPS only, with `CLOUTE_COOKIE_SECURE=true`. The proxy must:
+Сессия хранится в cookie, поэтому в интернете сервис должен работать только по HTTPS, с `CLOUTE_COOKIE_SECURE=true`. Прокси обязан:
 
-- pass the original `Host`: the server checks the `Origin` of WebSocket and
-  state-changing requests against it (CSRF protection) — without it everything
-  is rejected with 403;
-- let WebSocket (`Upgrade`) through on `/ws` and not cut it off before a minute
-  of silence (the server pings every 30 s).
+- передавать исходный `Host`: по нему сервер проверяет `Origin` у WebSocket и изменяющих запросов (защита от CSRF) — без этого всё будет отклоняться с 403;
+- пропускать WebSocket (`Upgrade`) на `/ws` и не обрывать его раньше, чем через минуту тишины (сервер пингует раз в 30 с).
 
-An nginx example (adapt it to your server):
+Пример для nginx (адаптируйте под свой сервер):
 
 ```nginx
 server {
@@ -111,81 +84,69 @@ server {
     }
 
     location /metrics {
-        deny all; # metrics are for Prometheus on the internal network only
+        deny all; # метрики — только для Prometheus из внутренней сети
     }
 }
 ```
 
-### Environment variables
+### Переменные окружения
 
-| Variable | Default | Meaning |
+| Переменная | По умолчанию | Смысл |
 |---|---|---|
-| `CLOUTE_DATABASE_URL` | — (required) | `postgres://user:password@host:5432/db?sslmode=…` |
-| `CLOUTE_HTTP_ADDR` | `:8080` | HTTP server address |
-| `CLOUTE_COOKIE_SECURE` | `false` | `true` behind HTTPS: the session cookie is sent over secure connections only |
-| `CLOUTE_LOG_FORMAT` | `text` (`json` in the image) | `text` or `json` |
+| `CLOUTE_DATABASE_URL` | — (обязательна) | `postgres://user:password@host:5432/db?sslmode=…` |
+| `CLOUTE_HTTP_ADDR` | `:8080` | адрес HTTP-сервера |
+| `CLOUTE_COOKIE_SECURE` | `false` | `true` за HTTPS: cookie сессии только по защищённому соединению |
+| `CLOUTE_LOG_FORMAT` | `text` (в образе `json`) | `text` или `json` |
 | `CLOUTE_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
-| `CLOUTE_SHUTDOWN_TIMEOUT` | `10s` | how long to wait for requests and connections to close on shutdown |
+| `CLOUTE_SHUTDOWN_TIMEOUT` | `10s` | сколько ждать запросы и закрытие соединений при остановке |
 
-Compose additionally uses `CLOUTE_DB_PASSWORD`, `CLOUTE_APP_PORT` and
-`CLOUTE_DB_PORT`.
+В compose дополнительно: `CLOUTE_DB_PASSWORD`, `CLOUTE_APP_PORT`, `CLOUTE_DB_PORT`.
 
-### Backup and upgrade
+### Резервное копирование и обновление
 
-All the state is in PostgreSQL (the operation log, snapshots, versions,
-comments, users):
+Всё состояние — в PostgreSQL (лог операций, снапшоты, версии, комментарии, пользователи):
 
 ```bash
 docker compose -f deploy/docker-compose.yml exec -T postgres pg_dump -U cloute -Fc cloute > cloute-$(date +%F).dump
 ```
 
-Upgrading is a rebuild and restart:
-`docker compose -f deploy/docker-compose.yml --profile app up -d --build --wait`.
-Connected clients go into offline mode for the duration of the restart and send
-their edits afterwards.
+Обновление — пересборка и перезапуск: `docker compose -f deploy/docker-compose.yml --profile app up -d --build --wait`. Подключённые клиенты на время перезапуска уходят в офлайн-режим и после него досылают свои правки.
 
-## Observability
+## Наблюдаемость
 
-`GET /metrics` — metrics in Prometheus format (plus the standard `go_*` and
-`process_*`):
+`GET /metrics` — метрики в формате Prometheus (плюс стандартные `go_*` и `process_*`):
 
-| Metric | Type | What it shows |
+| Метрика | Тип | Что показывает |
 |---|---|---|
-| `cloute_ws_connections` | gauge | open WebSocket connections |
-| `cloute_documents_loaded` | gauge | documents in memory (a document with no clients is unloaded after a minute) |
-| `cloute_ops_total` | counter | operations accepted and stored; `rate(cloute_ops_total[1m])` — operations per second |
-| `cloute_broadcast_seconds` | histogram | broadcast latency: from the server receiving operations to writing them to every other client's socket (including the database write) |
+| `cloute_ws_connections` | gauge | открытые WebSocket-соединения |
+| `cloute_documents_loaded` | gauge | документы в памяти (без клиентов документ выгружается через минуту) |
+| `cloute_ops_total` | counter | принятые и записанные операции; `rate(cloute_ops_total[1m])` — операций в секунду |
+| `cloute_broadcast_seconds` | histogram | задержка рассылки: от приёма операций сервером до записи их в сокет каждого другого клиента (включая запись в БД) |
 
-For example, the 95th percentile of broadcast latency:
-`histogram_quantile(0.95, rate(cloute_broadcast_seconds_bucket[5m]))`.
+Например, 95-й перцентиль задержки рассылки: `histogram_quantile(0.95, rate(cloute_broadcast_seconds_bucket[5m]))`.
 
-`GET /healthz` answers that the process is alive; it does not check the
-database.
+`GET /healthz` отвечает, что процесс жив; базу данных он не проверяет.
 
-Resource exhaustion forecasts for these metrics:
-[foresight](https://github.com/te1pe/foresight).
+Прогноз исчерпания ресурсов по этим метрикам: [foresight](https://github.com/te1pe/foresight).
 
-## Project layout
+## Структура проекта
 
 ```
-cmd/server/            main: config, logger, database, HTTP server, graceful shutdown
+cmd/server/            main: конфигурация, логгер, БД, HTTP-сервер, штатная остановка
 internal/
-  crdt/                the CRDT core (RGA), pure Go, no I/O and no dependencies
-  doc/                 document Hub: applying operations, broadcasting, presence
-  transport/ws/        WebSocket: reading and writing protocol messages
-  httpapi/             REST: documents, users, access links, versions
-  storage/postgres/    repositories on top of pgx
-  auth/                users, sessions, roles
-  config/              configuration from environment variables
-migrations/            goose SQL migrations
-web/                   client (Vite + TypeScript): src/crdt/ — the CRDT port, src/sync/ — the protocol
-testdata/crdt/         shared CRDT test vectors (JSON) for Go and TypeScript
-api/                   protocol and HTTP API specs
-docs/decisions/        architecture decision records
+  crdt/                ядро CRDT (RGA), чистый Go, без ввода-вывода и зависимостей
+  doc/                 Hub документа: применение операций, рассылка, присутствие участников
+  transport/ws/        WebSocket: чтение и запись сообщений протокола
+  httpapi/             REST: документы, пользователи, ссылки доступа, версии
+  storage/postgres/    репозитории поверх pgx
+  auth/                пользователи, сессии, роли
+  config/              конфигурация из переменных окружения
+migrations/            SQL-миграции goose
+web/                   клиент (Vite + TypeScript): src/crdt/ — порт CRDT, src/sync/ — протокол
+testdata/crdt/         общие тестовые векторы CRDT (JSON) для Go и TypeScript
+api/                   спецификации протокола и HTTP API
+docs/decisions/        записи архитектурных решений
 deploy/                docker-compose.yml, Dockerfile
 ```
 
-The Go and TypeScript CRDT implementations must produce identical results on
-the test vectors in `testdata/crdt/`.
-
-Документация на русском: [README.ru.md](README.ru.md).
+Реализации CRDT на Go и TypeScript обязаны давать одинаковый результат на тестовых векторах из `testdata/crdt/`.
