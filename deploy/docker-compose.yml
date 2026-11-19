@@ -1,0 +1,38 @@
+name: cloute
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: cloute
+      POSTGRES_PASSWORD: ${CLOUTE_DB_PASSWORD:-cloute}
+      POSTGRES_DB: cloute
+    ports:
+      - "127.0.0.1:${CLOUTE_DB_PORT:-5434}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloute -d cloute"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  app:
+    profiles: ["app"]
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      CLOUTE_DATABASE_URL: postgres://cloute:${CLOUTE_DB_PASSWORD:-cloute}@postgres:5432/cloute?sslmode=disable
+      CLOUTE_COOKIE_SECURE: ${CLOUTE_COOKIE_SECURE:-false}
+      CLOUTE_LOG_FORMAT: json
+    ports:
+      - "127.0.0.1:${CLOUTE_APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    stop_grace_period: 15s
+
+volumes:
+  pgdata:
