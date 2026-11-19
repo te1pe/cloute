@@ -1,0 +1,11 @@
+{
+  "name": "delete",
+  "description": "Напечатано «abc», затем удалён средний символ. Удаление может прийти раньше вставки — тогда оно ждёт в буфере.",
+  "ops": [
+    {"type": "insert", "id": [1, 1], "after": [0, 0], "char": "a"},
+    {"type": "insert", "id": [2, 1], "after": [1, 1], "char": "b"},
+    {"type": "insert", "id": [3, 1], "after": [2, 1], "char": "c"},
+    {"type": "delete", "id": [2, 1]}
+  ],
+  "expected": "ac"
+}
